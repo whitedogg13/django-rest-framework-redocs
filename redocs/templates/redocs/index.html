@@ -1,0 +1,504 @@
+<html>
+    <head>
+        <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
+        <script src="https://unpkg.com/react-json-view@1.16.6/dist/main.js"></script>
+        <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/all.js" integrity="sha384-xymdQtn1n3lH2wcu0qhcdaOpQwyoarkgLVxC/wZ5q7h9gHtxICrpcaSUfygqZGOe" crossorigin="anonymous"></script>
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Lato">
+        <style>
+            body {
+                font-family: 'Lato', serif;
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            h1 {
+                margin: 0;
+                padding: 0;
+            }
+
+            h2 {
+                margin: 6px;
+                padding: 0;
+            }
+
+            h3 {
+                margin: 4px;
+                padding: 0;
+            }
+
+            ul > li {
+                margin-bottom: 6px;
+            }
+
+            label {
+                padding-right: 15px;
+            }
+
+            button {
+                margin: 5px;
+                padding: 5px 10px;
+                border-radius: 4px;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            }
+        </style>
+    </head>
+<body>
+    <div id="root">
+        <h2>Loading DRF ReDocs...</h2>
+    </div>
+
+    <script type="text/babel">
+        const endpoints = {{ endpoints | safe }};
+        const djangoGreen = '#44B78B';
+
+        function main() {
+            const ApiProxy = new _ApiProxy();
+            const JsonView = reactJsonView.default; 
+
+            class Method extends React.Component {
+                constructor(props) {
+                    super(props);
+                    this.state = {
+                        response: null,
+                        error: null,
+                        sending: false,
+                    }
+                }
+
+                render() {
+                    let {endpoint, method} = this.props;
+                    let {response, error, sending} = this.state;
+                    return (
+                        <li>
+                            <span style={ {paddingRight: 10} }>{method}</span>
+                            <button onClick={() => this._doAction(method)} style={ {color: djangoGreen} }>Send</button>
+                            <button onClick={() => this.setState({response: null, error: null})} style={ {color: 'grey'} }>Clear</button>
+                            {
+                                sending && <h4>Sending...</h4> || (
+                                    <div>
+                                        <h4>Response:</h4>
+                                        { response && <JsonView src={response} /> }
+                                        <h4>Error:</h4>
+                                        { error && <JsonView src={error} /> }
+                                    </div>
+                                )
+                            }
+                        </li>
+                    )
+                }
+
+                _doAction = method => {
+                    let {endpoint, token, fields, urlFields, urlParams} = this.props;
+
+                    let path = endpoint.path;
+                    if (urlParams) {
+                        path = urlParams.reduce(
+                            (acc, key) => {
+                                return acc.replace(key, urlFields[key])
+                            }, path
+                        );
+                    }
+
+                    this.setState({sending: true, response: null, error: null});
+                    if (method === 'GET') {
+                        ApiProxy.get({
+                            token,
+                            path,
+                        })
+                            .then(response => {
+                                this.setState({response, sending: false});
+                            })
+                            .catch(error => {
+                                this.setState({error, sending: false});
+                            })
+                    } else if (method === 'POST') {
+                        ApiProxy.post({
+                            token,
+                            path,
+                            data: fields
+                        })
+                            .then(response => {
+                                this.setState({response, sending: false});
+                            })
+                            .catch(error => {
+                                this.setState({error, sending: false});
+                            })
+                    } else if (method === 'PUT') {
+                        ApiProxy.put({
+                            token,
+                            path,
+                            data: fields
+                        })
+                            .then(response => {
+                                this.setState({response, sending: false});
+                            })
+                            .catch(error => {
+                                this.setState({error, sending: false});
+                            })
+                    } else if (method === 'DELETE') {
+                        ApiProxy.delete({
+                            token,
+                            path,
+                        })
+                            .then(response => {
+                                this.setState({response, sending: false});
+                            })
+                            .catch(error => {
+                                this.setState({error, sending: false});
+                            })
+                    }
+                }
+            }
+
+            class Endpoint extends React.Component {
+                static Wrapper = styled.default.div`
+                    padding: 10px;
+                    border-bottom: 1px solid #ccc;
+                `;
+
+                static ToggleCollapse = styled.default.div`
+                    width: 60px;
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    background-color: ${djangoGreen};
+                    color: white;
+                    position: absolute;
+                    top: -15px;
+                    left: calc(50% - 40px);
+                    text-align: center;
+                `;
+
+                constructor(props) {
+                    super(props);
+
+                    function getUrlParams(path) {
+                        const pattern = /<([^>]+)>/g;
+                        return path.match(pattern);
+                    }
+
+                    this.urlParams = getUrlParams(this.props.endpoint.path);
+
+                    this.state = {
+                        open: false,
+                        fields: {},
+                        urlFields: this.urlParams && this.urlParams.reduce(
+                            (acc, key) => {
+                                acc[key] = '';
+                                return acc;
+                            }, {} 
+                        ),
+                    }
+                }
+
+                render() {
+                    let {endpoint, token} = this.props;
+                    let {open, fields, urlFields,} = this.state;
+
+                    return (
+                        <Endpoint.Wrapper>
+                            <div onClick={() => this.setState({open: !open})}>
+                                <h2 >{endpoint.path}</h2>
+                                <h3 style={ {color: '#ccc'} }>{endpoint.doc}</h3>
+                            </div>
+                            {
+                                open && (
+                                    <div style={ {padding: 15, marginTop: 15, position: 'relative', border: `1px solid ${djangoGreen}`, borderRadius: 4} }>
+                                        <Endpoint.ToggleCollapse onClick={() => this.setState({open: false})}>Close</Endpoint.ToggleCollapse>
+
+                                        <h3>Url Params: {!this.urlParams && '---'}</h3>
+                                            {this.urlParams && (
+                                                <ul>
+                                                    {this.urlParams.map(key => (
+                                                       <li key={key}>
+                                                           <label For={key}>{key.slice(1, -1)}:</label>
+                                                           <input
+                                                               name={key}
+                                                               value={urlFields[key]}
+                                                               onChange={e => {
+                                                                   this.setState({
+                                                                       urlFields: {
+                                                                           ...urlFields,
+                                                                           [key]: e.target.value
+                                                                       }
+                                                                   })
+                                                               }}
+                                                           />
+                                                       </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        <h3>Params: {!endpoint.input && '---'}</h3>
+                                        {endpoint.input && (
+                                            <ul>
+                                                {endpoint.input.map(({name: key, type}) => (
+                                                    <li key={key}>
+                                                        <label For={key}>{key}: </label>
+                                                        <input
+                                                            name={key}
+                                                            value={fields[key]}
+                                                            onChange={e => {
+                                                                this.setState({
+                                                                    fields: {
+                                                                        ...fields,
+                                                                        [key]: e.target.value
+                                                                    }
+                                                                })
+                                                            }}
+                                                        />
+                                                        <span style={ {paddingLeft: 10, color: '#ccc', fontSize: '80%'} }>({type})</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+
+                                        <h3>Methods:</h3>
+                                        <ul>
+                                            {endpoint.methods.filter(method => method !== 'OPTIONS').map(m => (
+                                                <Method
+                                                    method={m}
+                                                    endpoint={endpoint}
+                                                    fields={fields}
+                                                    urlParams={this.urlParams}
+                                                    urlFields={urlFields}
+                                                    token={token}
+                                                    key={m}
+                                                />
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )
+                            }
+                        </Endpoint.Wrapper>
+                    )
+                }
+            }
+
+            class App extends React.Component {
+                static Wrapper = styled.default.div`
+                    background-color: #e0e0e0;
+                    padding: 102px 0px 0px 0px;
+                    min-height: 100vh;
+               `;
+
+                static Navbar = styled.default.div`
+                    background-color: ${djangoGreen};
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: 100vw; 
+                    height: 72px;
+                    display: flex;
+                    align-items: center;
+                    padding: 0px 30px;
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.16), 0 6px 12px rgba(0,0,0,0.23);
+                    z-index: 100;
+                    & > h1 {
+                        color: white;
+                    }
+                `
+
+                static Footer = styled.default.div`
+                    margin-top: 60px;
+                    padding: 60px;
+                    background-color: white;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    & > h3 {
+                        color: #ccc;
+                    }
+                `
+
+                static Content = styled.default.div`
+                    max-width: 800px;
+                    margin: 0px auto;
+                    margin-bottom: 20px;
+                    padding: 15px;
+                    background-color: white;
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.16), 0 6px 12px rgba(0,0,0,0.23);
+                `
+
+                constructor(props) {
+                    super(props);
+                    this.state = {
+                        token: '',
+                        auth: true,
+                    }
+                }
+
+                render() {
+                    let {token, auth} = this.state;
+
+                    return (
+                        <App.Wrapper>
+                            <App.Navbar>
+                                <h1>DRF ReDocs</h1>
+                                <a href='https://github.com' target='_blank'>
+                                    <div style={ {fontSize: 28, color: 'white', marginLeft: 20} }>
+                                        <i className="fab fa-github"></i>
+                                    </div>
+                                </a>
+                            </App.Navbar>
+
+                            <App.Content>
+                                <h2 style={ {margin: 0, padding: 0} }>AUTH</h2>
+                                <label>Token:</label>
+                                <input value={token} onChange={e => this.setState({token: e.target.value})} />
+                                <label style={ {marginLeft: 10} }>
+                                    Enable:
+                                    <input type='checkbox' checked={auth} onChange={e => this.setState({auth: e.target.checked})} />
+                                </label>
+                            </App.Content>
+ 
+                            <App.Content>
+                            {
+                                endpoints.map(
+                                    endpoint => (
+                                        <Endpoint 
+                                            key={endpoint.path}
+                                            endpoint={endpoint} 
+                                            token={auth && token || null}
+                                        />
+                                    )
+                                )
+                            }
+                            </App.Content>
+
+                            <App.Footer>
+                                <h3>Build with ❤️ by <a href="https://www.revteltech.com" target="_blank">Revtel</a> & <a href="https://github.com/whitedogg13" target="_blank">whitedogg13</a></h3>
+                                <h3>DRF ReDocs 2018</h3>
+                            </App.Footer>
+                        </App.Wrapper>
+                    )
+                }
+            }
+
+            ReactDOM.render(
+                <App />,
+                document.getElementById('root')
+            );
+
+            console.log(endpoints);
+        }
+
+        // utilities
+        const universalFetch = (function getCorrectFetchImpl() {
+            return fetch;
+        }());
+
+        class _ApiProxy {
+            _commonHeader = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        
+            _buildEndpoint = ({path}) => path;
+
+            _buildHeaders = ({token, extraHeaders, skipCommonHeader=false}) => {
+                let authHeader = token ? {Authorization: `Token ${token}`} : {};
+                if (skipCommonHeader) {
+                    return authHeader;
+                }
+                return {
+                    ...this._commonHeader,
+                    ...authHeader,
+                }
+            };
+        
+            get({path, extraHeaders={}, token}) {
+                return universalFetch(
+                    this._buildEndpoint({path}),
+                    {
+                        method: 'GET',
+                        headers: this._buildHeaders({token, extraHeaders})
+                    }
+                )
+                    .then(response => {
+                        if (`${response.status}`[0] === '2') {
+                            return response.json();
+                        }
+                        return Promise.reject({status: response.status});
+                    })
+            }
+        
+            post({path, extraHeaders = {}, token, data}) {
+                return universalFetch(
+                    this._buildEndpoint({path}),
+                    {
+                        method: 'POST',
+                        headers: this._buildHeaders({token, extraHeaders}),
+                        body: JSON.stringify(data)
+                    }
+                )
+                    .then(response => {
+                        if (`${response.status}`[0] === '2') {
+                            return response.json();
+                        }
+                        return Promise.reject({status: response.status});
+                    })
+            }
+        
+            put({path, extraHeaders = {}, token, data}) {
+                return universalFetch(
+                    this._buildEndpoint({path}),
+                    {
+                        method: 'PUT',
+                        headers: this._buildHeaders({token, extraHeaders}),
+                        body: JSON.stringify(data)
+                    }
+                )
+                    .then(response => {
+                        if (`${response.status}`[0] === '2') {
+                            return response.json();
+                        }
+                        return Promise.reject({status: response.status});
+                    })
+            }
+        
+            delete({path, extraHeaders = {}, token}) {
+                return universalFetch(
+                    this._buildEndpoint({path}),
+                    {
+                        method: 'DELETE',
+                        headers: this._buildHeaders({token, extraHeaders}),
+                    }
+                )
+                    .then(response => {
+                        if (`${response.status}`[0] === '2') {
+                            return response.json();
+                        }
+                        return Promise.reject({status: response.status});
+                    })
+            }
+        
+            formPost({path, extraHeaders = {}, token, formData}) {
+                return universalFetch(
+                    this._buildEndpoint({path}),
+                    {
+                        method: 'POST',
+                        headers: this._buildHeaders({token, extraHeaders, skipCommonHeader: true}),
+                        body: formData 
+                    }
+                )
+                    .then(response => {
+                        if (`${response.status}`[0] === '2') {
+                            return response.json();
+                        }
+                        return Promise.reject({status: response.status});
+                    })
+            }
+        
+            getImage(imageUrl) {
+                return this._buildEndpoint({path: imageUrl});
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
