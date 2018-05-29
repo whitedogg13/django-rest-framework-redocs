@@ -1,6 +1,6 @@
 ## How to run this demo
 
-Assume you are in this directory (django_1_8_2)
+Assume you are in this directory
 
     # Create the virtual environment
     virtualenv .env
@@ -25,7 +25,7 @@ Assume you are in this directory (django_1_8_2)
 
 ### Viewing Docs
 
-Once you install and run the project go to [http://0.0.0.0:8000/docs/](http://0.0.0.0:8000/redocs/).
+Once you install and run the project go to [http://localhost:8000/redocs/](http://localhost:8000/redocs/).
 
 
 ### Note
