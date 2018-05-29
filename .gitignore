@@ -1,3 +1,4 @@
 *.pyc
 .idea/
+django_rest_framework_redocs.egg-info/
 

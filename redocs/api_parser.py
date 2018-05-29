@@ -8,6 +8,7 @@ except:
     from django.core.urlresolvers import RegexURLResolver, RegexURLPattern	    
 from rest_framework.views import APIView
 from .api_endpoint import ApiEndpoint
+from django.contrib.admindocs.views import simplify_regex
 
 
 class ApiParser(object):
@@ -46,11 +47,16 @@ class ApiParser(object):
 
     @staticmethod
     def _is_drf_pattern(pattern):
-        if hasattr(pattern.callback, 'view_class'):
-            return issubclass(pattern.callback.view_class, APIView)
+        if hasattr(pattern.callback, 'cls') and issubclass(pattern.callback.cls, APIView):
+            return True
+        if hasattr(pattern.callback, 'view_class') and issubclass(pattern.callback.view_class, APIView):
+            return True
+        return False
 
     @staticmethod
     def _get_pattern_name(pattern):
+        if hasattr(pattern, '_regex'):
+            return simplify_regex(pattern._regex)[1:]
         if hasattr(pattern, 'pattern'):
             _pattern = pattern.pattern
             if hasattr(_pattern, '_route'):
