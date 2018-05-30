@@ -274,24 +274,16 @@
                                         <h3>Params: {!endpoint.input && '---'}</h3>
                                         {endpoint.input && (
                                             <ul>
-                                                {endpoint.input.map(({name: key, type}) => (
-                                                    <li key={key}>
-                                                        <label For={key}>{key}: </label>
-                                                        <input
-                                                            name={key}
-                                                            value={fields[key]}
-                                                            onChange={e => {
-                                                                this.setState({
-                                                                    fields: {
-                                                                        ...fields,
-                                                                        [key]: e.target.value
-                                                                    }
-                                                                })
-                                                            }}
-                                                        />
-                                                        <span style={ {paddingLeft: 10, color: '#ccc', fontSize: '80%'} }>({type})</span>
-                                                    </li>
-                                                ))}
+                                                {endpoint.input.map(({name: key, type}) => {
+                                                    let inputProps = this._getInputProps({name: key, type}, fields);
+                                                    return (
+                                                        <li key={key}>
+                                                            <label For={key}>{key}: </label>
+                                                            <input {...inputProps} />
+                                                            <span style={ {paddingLeft: 10, color: '#ccc', fontSize: '80%'} }>({type})</span>
+                                                        </li>
+                                                    )
+                                                })}
                                             </ul>
                                         )}
 
@@ -315,6 +307,48 @@
                             }
                         </Endpoint.Wrapper>
                     )
+                }
+
+                _getInputProps = ({name, type}, fields) => {
+                    let props = {
+                        name,
+                        type: 'text',
+                        value: fields[name],
+                        onChange: e => {
+                            let value = null;
+                            if (e.target.type === 'checkbox') {
+                                value = e.target.checked;
+                            } else if (e.target.type === 'number') {
+                                value = parseInt(e.target.value, 10);
+                            } else {
+                                value = e.target.value;
+                            }
+
+                            this.setState({
+                                fields: {
+                                    ...fields,
+                                    [name]: value 
+                                }
+                            })
+                        }
+                    };
+
+                    switch (type) {
+                        case 'EmailField':
+                            props.type = 'email';
+                        case 'IntegerField':
+                            props.type = 'number';
+                        case 'BooleanField':
+                            delete props.value;
+                            props.type = 'checkbox';
+                            props.checked = fields[name] || false;
+                        case 'CharField':
+                            if (name === 'password' || name === 'pass') {
+                                props.type = 'password';
+                            }
+                    }
+
+                    return props;
                 }
             }
 
@@ -379,7 +413,7 @@
                 render() {
                     let {token, filter, auth} = this.state;
 
-                    let filteredEndpoints = endpoints.filter(
+                    let filteredEndpoints = endpoints.sort((a, b) => a.path - b.path).filter(
                         endpoint => {
                             if (filter) {
                                 return endpoint.path.toLocaleLowerCase().indexOf(filter.toLocaleLowerCase()) > -1
