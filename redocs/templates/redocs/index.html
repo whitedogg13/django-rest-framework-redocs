@@ -58,6 +58,15 @@
         function main() {
             const ApiProxy = new _ApiProxy();
             const JsonView = reactJsonView.default; 
+            const Styled = styled.default;
+
+            const Row = Styled.div`
+                display: flex;
+                align-items: ${props => props.align || 'stretch'};
+                justify-content: ${props => props.justify || 'flex-start'};
+                flex-wrap: ${props => props.wrap ? 'wrap' : 'nowrap'};
+                ${props => props.extraCss || ''};
+            `
 
             class Method extends React.Component {
                 constructor(props) {
@@ -92,7 +101,7 @@
                 }
 
                 _doAction = method => {
-                    let {endpoint, token, fields, urlFields, urlParams} = this.props;
+                    let {endpoint, token, fields, urlFields, urlParams, encoding} = this.props;
 
                     let path = endpoint.path;
                     if (urlParams) {
@@ -108,6 +117,7 @@
                         ApiProxy.get({
                             token,
                             path,
+                            encoding,
                         })
                             .then(response => {
                                 this.setState({response, sending: false});
@@ -119,6 +129,7 @@
                         ApiProxy.post({
                             token,
                             path,
+                            encoding,
                             data: fields
                         })
                             .then(response => {
@@ -131,6 +142,7 @@
                         ApiProxy.put({
                             token,
                             path,
+                            encoding,
                             data: fields
                         })
                             .then(response => {
@@ -154,13 +166,36 @@
                 }
             }
 
+            class Encoding extends React.Component {
+                static Type = Styled.div`
+                    margin: 6px 12px;
+                    color: ${props => props.selected ? djangoGreen : '#ccc'}
+                `;
+
+                render() {
+                    let {selected, onSelect} = this.props;
+                    
+                    return (
+                        <Row align='center' justify='center' extraCss='margin: 0 auto; padding: 3px;'>
+                            <h4>Encoding: </h4>
+                            <Encoding.Type selected={selected === 'json'} onClick={() => onSelect('json')}>
+                                json
+                            </Encoding.Type>
+                            <Encoding.Type selected={selected === 'form-data'} onClick={() => onSelect('form-data')}>
+                                form-data 
+                            </Encoding.Type>
+                        </Row>
+                    )
+                }
+            }
+
             class Endpoint extends React.Component {
-                static Wrapper = styled.default.div`
+                static Wrapper = Styled.div`
                     padding: 10px;
                     border-bottom: 1px solid #ccc;
                 `;
 
-                static ToggleCollapse = styled.default.div`
+                static ToggleCollapse = Styled.div`
                     width: 60px;
                     padding: 5px 10px;
                     border-radius: 15px;
@@ -191,12 +226,13 @@
                                 return acc;
                             }, {} 
                         ),
+                        encoding: 'json',
                     }
                 }
 
                 render() {
                     let {endpoint, token} = this.props;
-                    let {open, fields, urlFields,} = this.state;
+                    let {open, fields, urlFields, encoding} = this.state;
 
                     return (
                         <Endpoint.Wrapper>
@@ -208,6 +244,8 @@
                                 open && (
                                     <div style={ {padding: 15, marginTop: 15, position: 'relative', border: `1px solid ${djangoGreen}`, borderRadius: 4} }>
                                         <Endpoint.ToggleCollapse onClick={() => this.setState({open: false})}>Close</Endpoint.ToggleCollapse>
+
+                                        <Encoding selected={encoding} onSelect={encoding => this.setState({encoding})} />
 
                                         <h3>Url Params: {!this.urlParams && '---'}</h3>
                                             {this.urlParams && (
@@ -265,6 +303,7 @@
                                                     urlParams={this.urlParams}
                                                     urlFields={urlFields}
                                                     token={token}
+                                                    encoding={encoding}
                                                     key={m}
                                                 />
                                             ))}
@@ -278,13 +317,12 @@
             }
 
             class App extends React.Component {
-                static Wrapper = styled.default.div`
+                static Wrapper = Styled.div`
                     background-color: #e0e0e0;
                     padding: 102px 0px 0px 0px;
-                    min-height: 100vh;
                `;
 
-                static Navbar = styled.default.div`
+                static Navbar = Styled.div`
                     background-color: ${djangoGreen};
                     position: fixed;
                     left: 0;
@@ -301,8 +339,8 @@
                     }
                 `
 
-                static Footer = styled.default.div`
-                    margin-top: 60px;
+                static Footer = Styled.div`
+                    margin-top: 30px;
                     padding: 60px;
                     background-color: white;
                     display: flex;
@@ -314,7 +352,11 @@
                     }
                 `
 
-                static Content = styled.default.div`
+                static WithMinHeight = Styled.div`
+                    min-height: calc(100vh - 360px);
+                `
+
+                static Content = Styled.div`
                     max-width: 800px;
                     margin: 0px auto;
                     margin-bottom: 20px;
@@ -327,12 +369,22 @@
                     super(props);
                     this.state = {
                         token: '',
+                        filter: '',
                         auth: true,
                     }
                 }
 
                 render() {
-                    let {token, auth} = this.state;
+                    let {token, filter, auth} = this.state;
+
+                    let filteredEndpoints = endpoints.filter(
+                        endpoint => {
+                            if (filter) {
+                                return endpoint.path.toLocaleLowerCase().indexOf(filter.toLocaleLowerCase()) > -1
+                            }
+                            return true;
+                        }
+                    );
 
                     return (
                         <App.Wrapper>
@@ -345,29 +397,40 @@
                                 </a>
                             </App.Navbar>
 
-                            <App.Content>
-                                <h2 style={ {margin: 0, padding: 0} }>AUTH</h2>
-                                <label>Token:</label>
-                                <input value={token} onChange={e => this.setState({token: e.target.value})} />
-                                <label style={ {marginLeft: 10} }>
-                                    Enable:
-                                    <input type='checkbox' checked={auth} onChange={e => this.setState({auth: e.target.checked})} />
-                                </label>
-                            </App.Content>
- 
-                            <App.Content>
-                            {
-                                endpoints.map(
-                                    endpoint => (
-                                        <Endpoint 
-                                            key={endpoint.path}
-                                            endpoint={endpoint} 
-                                            token={auth && token || null}
-                                        />
-                                    )
-                                )
-                            }
-                            </App.Content>
+                            <App.WithMinHeight>
+                                <App.Content>
+                                    <h2>AUTH</h2>
+                                    <label>Token:</label>
+                                    <input value={token} onChange={e => this.setState({token: e.target.value})} />
+                                    <label style={ {marginLeft: 10} }>
+                                        Enable:
+                                        <input type='checkbox' checked={auth} onChange={e => this.setState({auth: e.target.checked})} />
+                                    </label>
+                                </App.Content>
+    
+                                <App.Content>
+                                    <Row align='center'>
+                                        <h2 style={ {marginRight: 10} }>Filter</h2>
+                                        <input value={filter} onChange={e => this.setState({filter: e.target.value})} />
+                                    </Row>
+                                </App.Content>
+     
+                                <App.Content>
+                                    {
+                                        filteredEndpoints.length === 0 ? (
+                                            <h2>No corresponding API</h2>
+                                        ) : filteredEndpoints.map(
+                                            endpoint => (
+                                                <Endpoint 
+                                                    key={endpoint.path}
+                                                    endpoint={endpoint} 
+                                                    token={auth && token || null}
+                                                />
+                                            )
+                                        )
+                                    }
+                                </App.Content>
+                            </App.WithMinHeight>
 
                             <App.Footer>
                                 <h3>Build with ❤️ by <a href="https://www.revteltech.com" target="_blank">Revtel</a> & <a href="https://github.com/whitedogg13" target="_blank">whitedogg13</a></h3>
@@ -409,6 +472,18 @@
                     ...authHeader,
                 }
             };
+
+            _buildBody = (data, encoding='json') => {
+                if (encoding === 'json') {
+                    return JSON.stringify(data);
+                } else if (encoding === 'form-data') {
+                    let formData = new FormData();
+                    for (let key in data) {
+                        formData.append(key, data[key]);
+                    }
+                    return formData;
+                }
+            }
         
             get({path, extraHeaders={}, token}) {
                 return universalFetch(
@@ -426,13 +501,14 @@
                     })
             }
         
-            post({path, extraHeaders = {}, token, data}) {
+            post({path, extraHeaders = {}, token, data, encoding}) {
+                let skipCommonHeader = encoding === 'form-data';
                 return universalFetch(
                     this._buildEndpoint({path}),
                     {
                         method: 'POST',
-                        headers: this._buildHeaders({token, extraHeaders}),
-                        body: JSON.stringify(data)
+                        headers: this._buildHeaders({token, extraHeaders, skipCommonHeader}),
+                        body: this._buildBody(data, encoding)
                     }
                 )
                     .then(response => {
@@ -443,13 +519,14 @@
                     })
             }
         
-            put({path, extraHeaders = {}, token, data}) {
+            put({path, extraHeaders = {}, token, data, encoding}) {
+                let skipCommonHeader = encoding === 'form-data';
                 return universalFetch(
                     this._buildEndpoint({path}),
                     {
                         method: 'PUT',
-                        headers: this._buildHeaders({token, extraHeaders}),
-                        body: JSON.stringify(data)
+                        headers: this._buildHeaders({token, extraHeaders, skipCommonHeader}),
+                        body: this._buildBody(data, encoding)
                     }
                 )
                     .then(response => {
@@ -474,27 +551,6 @@
                         }
                         return Promise.reject({status: response.status});
                     })
-            }
-        
-            formPost({path, extraHeaders = {}, token, formData}) {
-                return universalFetch(
-                    this._buildEndpoint({path}),
-                    {
-                        method: 'POST',
-                        headers: this._buildHeaders({token, extraHeaders, skipCommonHeader: true}),
-                        body: formData 
-                    }
-                )
-                    .then(response => {
-                        if (`${response.status}`[0] === '2') {
-                            return response.json();
-                        }
-                        return Promise.reject({status: response.status});
-                    })
-            }
-        
-            getImage(imageUrl) {
-                return this._buildEndpoint({path: imageUrl});
             }
         }
 
