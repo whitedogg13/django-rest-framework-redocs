@@ -336,16 +336,23 @@
                     switch (type) {
                         case 'EmailField':
                             props.type = 'email';
+                            break;
+
                         case 'IntegerField':
                             props.type = 'number';
+                            break;
+
                         case 'BooleanField':
                             delete props.value;
                             props.type = 'checkbox';
                             props.checked = fields[name] || false;
+                            break;
+
                         case 'CharField':
                             if (name === 'password' || name === 'pass') {
                                 props.type = 'password';
                             }
+                            break;
                     }
 
                     return props;
