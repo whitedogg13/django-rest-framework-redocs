@@ -104,7 +104,7 @@
                 }
 
                 _doAction = method => {
-                    let {endpoint, token, fields, urlFields, urlParams, encoding} = this.props;
+                    let {endpoint, token, fields, urlFields, urlParams, encoding, getFiles} = this.props;
 
                     let path = endpoint.path;
                     if (urlParams) {
@@ -132,7 +132,8 @@
                             token,
                             path,
                             encoding,
-                            data: fields
+                            data: fields,
+                            files: getFiles()
                         })
                             .then(response => {
                                 this.setState({response, sending: false});
@@ -145,7 +146,8 @@
                             token,
                             path,
                             encoding,
-                            data: fields
+                            data: fields,
+                            files: getFiles()
                         })
                             .then(response => {
                                 this.setState({response, sending: false});
@@ -230,6 +232,8 @@
                         ),
                         encoding: 'json',
                     }
+
+                    this.inputRefs = {};
                 }
 
                 render() {
@@ -298,6 +302,7 @@
                                                     urlFields={urlFields}
                                                     token={token}
                                                     encoding={encoding}
+                                                    getFiles={this._getInputFiles}
                                                     key={m}
                                                 />
                                             ))}
@@ -353,9 +358,28 @@
                                 props.type = 'password';
                             }
                             break;
+
+                        case 'FileField':
+                            return {
+                                name,
+                                type: 'file',
+                                ref: fileInput => {
+                                    this.inputRefs[name] = fileInput;
+                                },
+                            };
                     }
 
                     return props;
+                }
+
+                _getInputFiles = () => {
+                    return Object.keys(this.inputRefs).reduce(
+                        (acc, name) => {
+                            let input = this.inputRefs[name];
+                            acc[name] = input.files && input.files[0] || null;
+                            return acc;
+                        }, {}
+                    )
                 }
             }
 
@@ -511,7 +535,8 @@
                 }
             };
 
-            _buildBody = (data, encoding='json') => {
+            _buildBody = (data, files, encoding='json') => {
+                console.log(files);
                 if (encoding === 'json') {
                     return JSON.stringify(data);
                 } else if (encoding === 'form-data') {
@@ -519,6 +544,10 @@
                     for (let key in data) {
                         formData.append(key, data[key]);
                     }
+                    for (let key in files) {
+                        formData.append(key, files[key]);
+                    }
+                    console.log('formData', formData);
                     return formData;
                 }
             }
@@ -539,14 +568,14 @@
                     })
             }
         
-            post({path, extraHeaders = {}, token, data, encoding}) {
+            post({path, extraHeaders = {}, token, data, files, encoding}) {
                 let skipCommonHeader = encoding === 'form-data';
                 return universalFetch(
                     this._buildEndpoint({path}),
                     {
                         method: 'POST',
                         headers: this._buildHeaders({token, extraHeaders, skipCommonHeader}),
-                        body: this._buildBody(data, encoding)
+                        body: this._buildBody(data, files, encoding)
                     }
                 )
                     .then(response => {
@@ -557,14 +586,14 @@
                     })
             }
         
-            put({path, extraHeaders = {}, token, data, encoding}) {
+            put({path, extraHeaders = {}, token, data, files, encoding}) {
                 let skipCommonHeader = encoding === 'form-data';
                 return universalFetch(
                     this._buildEndpoint({path}),
                     {
                         method: 'PUT',
                         headers: this._buildHeaders({token, extraHeaders, skipCommonHeader}),
-                        body: this._buildBody(data, encoding)
+                        body: this._buildBody(data, files, encoding)
                     }
                 )
                     .then(response => {
