@@ -54,6 +54,9 @@
     <script type="text/babel">
         const endpoints = {{ endpoints | safe }};
         const djangoGreen = '#44B78B';
+        const universalFetch = (function getCorrectFetchImpl() {
+            return fetch;
+        }());
 
         function main() {
             const ApiProxy = new _ApiProxy();
@@ -117,7 +120,6 @@
                         ApiProxy.get({
                             token,
                             path,
-                            encoding,
                         })
                             .then(response => {
                                 this.setState({response, sending: false});
@@ -390,7 +392,7 @@
                         <App.Wrapper>
                             <App.Navbar>
                                 <h1>DRF ReDocs</h1>
-                                <a href='https://github.com' target='_blank'>
+                                <a href='https://github.com/whitedogg13/django-rest-framework-redocs/' target='_blank'>
                                     <div style={ {fontSize: 28, color: 'white', marginLeft: 20} }>
                                         <i className="fab fa-github"></i>
                                     </div>
@@ -448,11 +450,6 @@
 
             console.log(endpoints);
         }
-
-        // utilities
-        const universalFetch = (function getCorrectFetchImpl() {
-            return fetch;
-        }());
 
         class _ApiProxy {
             _commonHeader = {
