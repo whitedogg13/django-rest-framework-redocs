@@ -6,6 +6,7 @@ Inspired by [django-rest-framework-docs](https://github.com/manosim/django-rest-
 
 ## TODOs
 
+* support input field type, boolean, integer, file
 * port Django 2.0.5 examples
 * goes to pip
 
