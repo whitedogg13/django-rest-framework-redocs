@@ -2,4 +2,6 @@
 .idea/
 django_rest_framework_redocs.egg-info/
 .DS_Store
+media
+migrations
 

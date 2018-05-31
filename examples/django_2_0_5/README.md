@@ -15,7 +15,7 @@ Assume you are in this directory
     pip install -e ../../
 
     # Init django site
-    python manage.py makemigrations
+    python manage.py makemigrations accounts organisations
     python manage.py migrate
     python manage.py createsuperuser
 

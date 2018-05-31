@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from project.accounts.models import User
+from django.contrib import admin
 
 
 class Organisation(models.Model):
@@ -33,3 +34,7 @@ class Membership(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.CharField(choices=MEMBER_ROLES, max_length=20, default="USER")
     is_owner = models.BooleanField(default=False)
+
+
+admin.site.register(Organisation)
+admin.site.register(Membership)
