@@ -16,9 +16,9 @@ Inspired by [django-rest-framework-docs](https://github.com/manosim/django-rest-
 
 ## Installation
 
-For now, please do `pip install git+https://github.com/whitedogg13/django-rest-framework-redocs`.
-
-(We will publish it soon after some more tests!)
+```
+pip install django_rest_framework_redocs
+```
 
 ## Dependencies
 
