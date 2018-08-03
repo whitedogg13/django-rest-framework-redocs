@@ -444,7 +444,7 @@
                 render() {
                     let {token, filter, auth} = this.state;
 
-                    let filteredEndpoints = endpoints.sort((a, b) => a.path - b.path).filter(
+                    let filteredEndpoints = endpoints.sort((a, b) => a.path > b.path ? 1 : -1).filter(
                         endpoint => {
                             if (filter) {
                                 return endpoint.path.toLocaleLowerCase().indexOf(filter.toLocaleLowerCase()) > -1
