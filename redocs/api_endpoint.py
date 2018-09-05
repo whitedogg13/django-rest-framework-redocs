@@ -50,7 +50,10 @@ class ApiEndpoint:
 
     @staticmethod
     def _get_complete_path(pattern, prefix=None):
-        regex = pattern._regex if hasattr(pattern, "_regex") else pattern.pattern._regex
+        try:
+            regex = pattern._regex if hasattr(pattern, "_regex") else pattern.pattern._regex
+        except:
+            regex = pattern._route if hasattr(pattern, "_route") else pattern.pattern._route
         return prefix + simplify_regex(regex)[1:]
 
     def _get_serializer_fields(self, serializer):
