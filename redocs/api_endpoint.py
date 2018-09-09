@@ -10,7 +10,7 @@ class ApiEndpoint:
         self.methods = self._get_allowed_methods()
         self.complete_path = self._get_complete_path(pattern, prefix)
         self.name = self._get_endpoint_name()
-        self.docstring = self._get_doc()
+        self.docstring = str(self._get_doc())
 
         if hasattr(self.view.cls, 'extra_url_params'):
             self.extra_url_params = self.view.cls.extra_url_params
@@ -75,7 +75,7 @@ class ApiEndpoint:
                     "sub_fields": sub_fields,
                     "required": field.required,
                     "to_many_relation": to_many_relation,
-                    "help_text": field.help_text,
+                    "help_text": str(field.help_text),
                     "write_only": field.write_only
                 }
                 if isinstance(field, ChoiceField) and not isinstance(field, (RelatedField, ManyRelatedField)):
