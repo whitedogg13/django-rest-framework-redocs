@@ -104,7 +104,7 @@
                 }
 
                 _doAction = method => {
-                    let {endpoint, token, fields, urlFields, urlParams, encoding, getFiles} = this.props;
+                    let {endpoint, token, fields, urlFields, urlParams, encoding, getFiles, queryParams} = this.props;
 
                     let path = endpoint.path;
                     if (urlParams) {
@@ -114,6 +114,8 @@
                             }, path
                         );
                     }
+
+                    path += queryParams;
 
                     this.setState({sending: true, response: null, error: null});
                     if (method === 'GET') {
@@ -231,6 +233,7 @@
                             }, {} 
                         ),
                         encoding: 'json',
+                        queryParams: '',
                     }
 
                     this.inputRefs = {};
@@ -238,7 +241,7 @@
 
                 render() {
                     let {endpoint, token} = this.props;
-                    let {open, fields, urlFields, encoding} = this.state;
+                    let {open, fields, urlFields, encoding, queryParams} = this.state;
 
                     return (
                         <Endpoint.Wrapper>
@@ -275,6 +278,19 @@
                                                     ))}
                                                 </ul>
                                             )}
+
+                                        <h3>Query Params: 
+                                            <input
+                                              value={queryParams}
+                                              style={ { marginLeft: 15 } }
+                                              onChange={e => {
+                                                  this.setState({
+                                                      queryParams: e.target.value
+                                                  })
+                                              }}
+                                            />
+                                        </h3>
+
                                         <h3>Params: {!endpoint.input && '---'}</h3>
                                         {endpoint.input && (
                                             <ul>
@@ -299,6 +315,7 @@
                                                     endpoint={endpoint}
                                                     fields={fields}
                                                     urlParams={this.urlParams}
+                                                    queryParams={queryParams}
                                                     urlFields={urlFields}
                                                     token={token}
                                                     encoding={encoding}
