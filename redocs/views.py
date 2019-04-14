@@ -30,8 +30,15 @@ def get_endpoints(request):
     endpoints = walk_endpoints(api_parser.endpoints)
 
     force_script_name = getattr(settings, 'FORCE_SCRIPT_NAME', '')
-    if force_script_name.endswith('/'):
-        force_script_name = force_script_name[:-1]
+    if force_script_name:
+        if force_script_name.endswith('/'):
+            force_script_name = force_script_name[:-1]
+
+        temp_endpoints = endpoints.copy()
+        endpoints = {}
+        for k, v in temp_endpoints.items():
+            endpoints[force_script_name + k] = v
+
     return render(request, 'redocs/index.html', {
         'force_script_name': force_script_name,
         'endpoints': json.dumps(endpoints),

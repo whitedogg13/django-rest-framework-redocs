@@ -508,7 +508,7 @@
                                         ) : filteredEndpoints.map(
                                             endpoint => (
                                                 <Endpoint 
-                                                    key={force_script_name + endpoint.path}
+                                                    key={endpoint.path}
                                                     endpoint={endpoint} 
                                                     token={auth && token || null}
                                                 />
