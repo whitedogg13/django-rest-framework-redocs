@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from importlib import import_module
 from django.utils.module_loading import import_string
@@ -27,7 +25,11 @@ class ApiParser(object):
             self.patterns = root_urlconf.urlpatterns
 
     def parse(self):
-        self._parse(self.patterns, self.endpoints)
+        self._parse(
+            self.patterns,
+            self.endpoints,
+            getattr(settings, 'FORCE_SCRIPT_NAME', '')
+        )
 
     def _parse(self, urlpatterns, parent_node, prefix=''):
         for pattern in urlpatterns:
@@ -38,12 +40,9 @@ class ApiParser(object):
                     parent_node[child_node_name] = {}
 
                 self._parse(
-                    urlpatterns=os.path.join(
-                        getattr(settings, 'FORCE_SCRIPT_NAME', ''), pattern.url_patterns
-                    ),
+                    urlpatterns=pattern.url_patterns,
                     parent_node=parent_node[child_node_name] if child_node_name else parent_node,
-                    prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
-                    # prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
+                    prefix='%s/%s' % (prefix, child_node_name)
                 )
 
             elif isinstance(pattern, RegexURLPattern) and self._is_drf_pattern(pattern):
