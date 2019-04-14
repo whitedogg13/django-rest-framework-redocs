@@ -36,7 +36,7 @@ def get_endpoints(request):
 
         temp_endpoints = endpoints.copy()
         endpoints = {}
-        for item in temp_endpoints.items():
+        for item in temp_endpoints:
             new_item = {}
             for k, v in item.items():
                 if k == 'path':
