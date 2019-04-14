@@ -45,6 +45,5 @@ def get_endpoints(request):
             endpoints.append(new_item)
 
     return render(request, 'redocs/index.html', {
-        'force_script_name': force_script_name,
         'endpoints': json.dumps(endpoints),
     })
