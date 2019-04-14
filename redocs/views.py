@@ -36,8 +36,13 @@ def get_endpoints(request):
 
         temp_endpoints = endpoints.copy()
         endpoints = {}
-        for k, v in temp_endpoints.items():
-            endpoints[force_script_name + k] = v
+        for item in temp_endpoints.items():
+            new_item = {}
+            for k, v in item.items():
+                if k == 'path':
+                    v = force_script_name + v
+                new_item[k] = v
+            endpoints.append(new_item)
 
     return render(request, 'redocs/index.html', {
         'force_script_name': force_script_name,
