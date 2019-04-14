@@ -35,7 +35,7 @@ def get_endpoints(request):
             force_script_name = force_script_name[:-1]
 
         temp_endpoints = endpoints.copy()
-        endpoints = {}
+        endpoints = []
         for item in temp_endpoints:
             new_item = {}
             for k, v in item.items():
