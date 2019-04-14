@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.conf import settings
 from .api_parser import ApiParser
 import json
 
@@ -9,10 +10,12 @@ def walk_endpoints(tree, endpoints=None):
 
     for k, v in tree.items():
         if type(v) == dict:
+            import pdb; pdb.set_trace()
             print(1, v, endpoints)
             walk_endpoints(v, endpoints)
         else:
-            print(1, v)
+            import pdb; pdb.set_trace()
+            print(2, v)
             endpoints.append({
                 'path': v.complete_path,
                 'auth': v.authentication_classes,
