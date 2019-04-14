@@ -27,8 +27,7 @@ class ApiParser(object):
     def parse(self):
         self._parse(
             self.patterns,
-            self.endpoints,
-            getattr(settings, 'FORCE_SCRIPT_NAME', '')
+            self.endpoints
         )
 
     def _parse(self, urlpatterns, parent_node, prefix=''):
