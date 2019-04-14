@@ -9,8 +9,10 @@ def walk_endpoints(tree, endpoints=None):
 
     for k, v in tree.items():
         if type(v) == dict:
+            print(1, v, endpoints)
             walk_endpoints(v, endpoints)
         else:
+            print(1, v)
             endpoints.append({
                 'path': v.complete_path,
                 'auth': v.authentication_classes,
