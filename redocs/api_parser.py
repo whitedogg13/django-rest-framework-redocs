@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from importlib import import_module
 from django.utils.module_loading import import_string
@@ -5,7 +7,7 @@ try:
     from django.urls import URLPattern as RegexURLPattern
     from django.urls import URLResolver as RegexURLResolver
 except:
-    from django.core.urlresolvers import RegexURLResolver, RegexURLPattern	    
+    from django.core.urlresolvers import RegexURLResolver, RegexURLPattern
 from rest_framework.views import APIView
 from .api_endpoint import ApiEndpoint
 from django.contrib.admindocs.views import simplify_regex
@@ -38,7 +40,8 @@ class ApiParser(object):
                 self._parse(
                     urlpatterns=pattern.url_patterns,
                     parent_node=parent_node[child_node_name] if child_node_name else parent_node,
-                    prefix='%s/%s' % (prefix, child_node_name)
+                    prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
+                    # prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
                 )
 
             elif isinstance(pattern, RegexURLPattern) and self._is_drf_pattern(pattern):
@@ -62,5 +65,3 @@ class ApiParser(object):
             if hasattr(_pattern, '_route'):
                 return str(_pattern._route)
         return ''
-
-

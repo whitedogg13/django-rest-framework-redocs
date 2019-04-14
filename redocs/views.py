@@ -15,7 +15,8 @@ def walk_endpoints(tree, endpoints=None):
             walk_endpoints(v, endpoints)
         else:
             endpoints.append({
-                'path': os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), v.complete_path),
+                # 'path': os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), v.complete_path),
+                'path': v.complete_path,
                 'auth': v.authentication_classes,
                 'methods': v.methods,
                 'input': v.input_fields if hasattr(v, 'input_fields') else None,
