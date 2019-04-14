@@ -13,10 +13,10 @@ def walk_endpoints(tree, endpoints=None):
         if type(v) == dict:
             walk_endpoints(v, endpoints)
         else:
-            force_script_name = getattr(settings, 'FORCE_SCRIPT_NAME', '')
+            # force_script_name = getattr(settings, 'FORCE_SCRIPT_NAME', '')
             endpoints.append({
-                'path': '/'.join(u.strip('/') for u in [force_script_name, v.complete_path]),
-                # 'path': v.complete_path,
+                # 'path': '/'.join(u.strip('/') for u in [force_script_name, v.complete_path]),
+                'path': v.complete_path,
                 'auth': v.authentication_classes,
                 'methods': v.methods,
                 'input': v.input_fields if hasattr(v, 'input_fields') else None,
