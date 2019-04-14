@@ -38,7 +38,9 @@ class ApiParser(object):
                     parent_node[child_node_name] = {}
 
                 self._parse(
-                    urlpatterns=pattern.url_patterns,
+                    urlpatterns=os.path.join(
+                        getattr(settings, 'FORCE_SCRIPT_NAME', ''), pattern.url_patterns
+                    ),
                     parent_node=parent_node[child_node_name] if child_node_name else parent_node,
                     prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
                     # prefix=os.path.join(getattr(settings, 'FORCE_SCRIPT_NAME', ''), prefix, child_node_name)
