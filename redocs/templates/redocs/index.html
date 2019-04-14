@@ -53,6 +53,7 @@
 
     <script type="text/babel">
         const endpoints = {{ endpoints | safe }};
+        const force_script_name = {{ force_script_name | safe }};
         const djangoGreen = '#44B78B';
         const universalFetch = (function getCorrectFetchImpl() {
             return fetch;
@@ -507,7 +508,7 @@
                                         ) : filteredEndpoints.map(
                                             endpoint => (
                                                 <Endpoint 
-                                                    key={endpoint.path}
+                                                    key={force_script_name + endpoint.path}
                                                     endpoint={endpoint} 
                                                     token={auth && token || null}
                                                 />
