@@ -5,7 +5,7 @@ try:
     from django.urls import URLPattern as RegexURLPattern
     from django.urls import URLResolver as RegexURLResolver
 except:
-    from django.core.urlresolvers import RegexURLResolver, RegexURLPattern	    
+    from django.core.urlresolvers import RegexURLResolver, RegexURLPattern
 from rest_framework.views import APIView
 from .api_endpoint import ApiEndpoint
 from django.contrib.admindocs.views import simplify_regex
@@ -25,7 +25,10 @@ class ApiParser(object):
             self.patterns = root_urlconf.urlpatterns
 
     def parse(self):
-        self._parse(self.patterns, self.endpoints)
+        self._parse(
+            self.patterns,
+            self.endpoints
+        )
 
     def _parse(self, urlpatterns, parent_node, prefix=''):
         for pattern in urlpatterns:
@@ -62,5 +65,3 @@ class ApiParser(object):
             if hasattr(_pattern, '_route'):
                 return str(_pattern._route)
         return ''
-
-
